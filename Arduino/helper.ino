@@ -1,0 +1,537 @@
+// Определение состояний системы
+#define STATE_SETUP               0 // Состояние инициализации
+#define STATE_CONN_NET            1 // Состояние соединения с сетью
+#define STATE_CONN_NET_ERR        2 // Состояние ошибки соединения с сетью
+#define STATE_CONN_SRV            3 // Состояние соединения с сервером
+#define STATE_CONN_SRV_ERR        4 // Состояние ошибки соединения с сервером
+#define STATE_WAITING_FOR_PASS    5 // Состояние ожидания пропуска
+#define STATE_CHOOSE_ACTION       6 // Состояние выбора действия
+#define STATE_CHOOSE_CELL         7 // Состояние выбора ячейки
+#define STATE_WAITING_FOR_VALUE   8 // Состояние ожидания ценности
+#define STATE_CONFIRM_ACTION      9 // Состояние подтверждения действия
+
+/*
+ * ====================================================================================================
+ */
+
+// Для обмена данными с сервером по Ethernet
+#include <Ethernet.h>
+
+// Задержки между попытками повторного соединения с сетью/сервером при ошибке соединения
+#define CONN_NET_DELAY 10000
+#define CONN_SRV_DELAY 10000
+
+// Типы отправляемых на сервер сообщений
+#define MSG_CHECK_CONN  '0' // Сообщение проверки соединения
+#define MSG_CELLS_TAKE  '1' // Запрос ячеек, доступных для взятия
+#define MSG_CELLS_RET   '2' // Запрос ячеек, доступных для возврата
+#define MSG_PASS_ID     '3' // Запрос на подтверждение валидности пропуска
+#define MSG_VALUE_ID    '4' // Запрос на подтверждение валидности ценности
+#define MSG_END_SESSION '5' // Сообщение об окончании работы пользователя с системой
+
+// Ответы на запрос о подтверждении валидности пропуска
+#define REP_VALID_PASS   '0'
+#define REP_INVALID_PASS '1'
+
+// Ответы на запрос о подтверждении валидности ценности
+#define REP_VALID_VALUE   '0'
+#define REP_INVALID_VALUE '1'
+#define REP_WRONG_TYPE    '2'
+
+EthernetClient client; // Объект библиотечного класса для соединения с сервером
+const byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED}; // МАС-адрес контроллера
+const byte srv_ip[] = {172, 18, 160, 26}; // IP-адрес сервера
+const int srv_port = 19230; // Порт сервера
+
+/*
+ * Функция, преобразующая номер ячейки из числового формата в знаковый. 
+ * Входной параметр: номер ячейки в виде числа
+ * Выходной параметр: номер ячейки в виде символа
+ */
+char cellToChar(int c) {
+  if (c == 1) return '1';
+  if (c == 2) return '2';
+  if (c == 3) return '3';
+  if (c == 4) return '4';
+  if (c == 5) return '5';
+  if (c == 6) return '6';
+  if (c == 7) return '7';
+  if (c == 8) return '8';
+}
+
+/*
+ * ====================================================================================================
+ */
+
+// Для графического дисплея
+#include <UTFT.h>
+#include <URTouch.h>
+
+// Минимальные и максимальные координаты дисплея по осям
+#define X_MIN 0
+#define X_MAX 319
+
+#define Y_MIN 0
+#define Y_MAX 239
+
+// Максимальные и минимальные значения АЦП по осям, а также калибровочные константы для различных частей экрана
+#define TPX_MIN 0
+#define TPX_MAX 4000
+#define TPXD_T 4000
+#define TPXD_B 4500
+
+#define TPY_MIN 0
+#define TPY_MAX 4000
+#define TPYD_L 3800
+#define TPYD_R 4000
+
+// Цвет фона
+#define BC_R 0
+#define BC_G 0
+#define BC_B 0
+
+// Цвет большинства надписей и кнопок
+#define FC_R 255
+#define FC_G 255
+#define FC_B 0
+
+UTFT disp(TFT01_24SP,  9, 8, 12, 11, 10); // Объект библиотечного класса для отображения информации на дисплее
+URTouch ts(6, 5, 4, 3, 2); // Объект библиотечного класса для считывания информации с дисплея
+
+int x, y; // Для хранения координат по осям
+int16_t tpx, tpy; // Для хранения уровней АЦП по осям
+
+extern uint8_t BigFont[]; // Подключение шрифта
+
+/*
+ * Функция, преобразующая уровень АЦП по оси Y в координату по оси Х.
+ * Входной параметр: уровень АЦП по оси Y.
+ * Выходной параметр: координата по оси X.
+ */
+int tpyToX(int16_t tpy)
+{
+  if (tpy < TPY_MIN)
+    tpy = TPY_MIN;
+
+  if (tpy > TPY_MAX)
+    tpy = TPY_MAX;
+
+  int tpyd;
+  if (int(tpy) <= int(TPY_MAX / 2))
+    tpyd = TPYD_R;
+  else
+    tpyd = TPYD_L;
+  
+  return int( double(X_MAX) * ( 1.0 - double(tpy) / double(tpyd) ) );
+}
+
+/*
+ * Функция, преобразующая уровень АЦП по оси X в координату по оси Y.
+ * Входной параметр: уровень АЦП по оси X.
+ * Выходной параметр: координата по оси Y.
+ */
+int tpxToY(int16_t tpx)
+{
+  if (tpx < TPX_MIN)
+    tpx = TPX_MIN;
+
+  if (tpx > TPX_MAX)
+    tpx = TPX_MAX;
+
+  int tpxd;
+  if (int(tpx) <= int(TPX_MAX / 2))
+    tpxd = TPXD_B;
+  else
+    tpxd = TPXD_T;
+  
+  return int( double(Y_MAX) * ( 1.0 - double(tpx) / double(tpxd) ) );
+}
+
+/*
+ * Далее идет серия функций, предназначенная для отображения различных надписей и кнопок, 
+ * а также считывания нажатий на дисплей.
+ */
+ 
+void printWFP(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+  disp.print("WAITING", 103, 24);
+  disp.print("FOR", 135, 84);
+  disp.print("PASS", 127, 144);
+}
+
+void printAG(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+  disp.print("ACCESS GRANTED", 47, 204);
+}
+
+void printAD(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+  disp.print("ACCESS DENIED", 55, 204);
+}
+
+void printTRQ(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+  
+  disp.print("CHOOSE ACTION", 55, 7);
+  
+  disp.drawRoundRect(50, 40, 270, 90);
+  disp.print("TAKE", 127, 57);
+
+  disp.drawRoundRect(50, 110, 270, 160);
+  disp.print("RETURN", 111, 127);
+
+  disp.drawRoundRect(50, 180, 270, 230);
+  disp.print("QUIT", 127, 197);
+}
+
+int touchTRQ(int x, int y)
+{
+  int res = 0;
+
+  if (x >= 50 && x <= 270 && y >= 40 && y <= 90)
+    res = 1; // TAKE
+
+  if (x >= 50 && x <= 270 && y >= 110 && y <= 160)
+    res = 2; // RETURN
+
+  if (x >= 50 && x <= 270 && y >= 180 && y <= 230)
+    res = 3; // QUIT
+
+  return res;
+}
+
+void printCBQ(int r, int g, int b, int c_en[8])
+{
+  disp.setColor(r, g, b);
+
+  disp.print("CHOOSE CELL", 71, 7);
+
+  if (c_en[0] == 1) {
+    disp.drawRoundRect(10, 40, 70, 100);
+    disp.print("1", 32, 62);
+  }
+
+  if (c_en[1] == 1) {
+    disp.drawRoundRect(90, 40, 150, 100);
+    disp.print("2", 112, 62);
+  }
+
+  if (c_en[2] == 1) {
+    disp.drawRoundRect(170, 40, 230, 100);
+    disp.print("3", 192, 62);
+  }
+
+  if (c_en[3] == 1) {
+    disp.drawRoundRect(250, 40, 310, 100);
+    disp.print("4", 272, 62);
+  }
+
+  if (c_en[4] == 1) {
+    disp.drawRoundRect(10, 120, 70, 180);
+    disp.print("5", 32, 142);
+  }
+
+  if (c_en[5] == 1) {
+    disp.drawRoundRect(90, 120, 150, 180);
+    disp.print("6", 112, 142);
+  }
+
+  if (c_en[6] == 1) {
+    disp.drawRoundRect(170, 120, 230, 180);
+    disp.print("7", 192, 142);
+  }
+
+  if (c_en[7] == 1) {
+    disp.drawRoundRect(250, 120, 310, 180);
+    disp.print("8", 272, 142);
+  }
+
+  disp.drawRoundRect(40, 200, 120, 230);
+  disp.print("BACK", 48, 207);
+  
+  disp.drawRoundRect(200, 200, 280, 230);
+  disp.print("QUIT", 208, 207);
+}
+
+int touchCBQ(int x, int y, int c_en[8])
+{
+  int res = 0;
+
+  if (x >= 10 && x <= 70 && y >= 40 && y <= 100 && c_en[0] == 1)
+    res = 1; // cell 1
+
+  if (x >= 90 && x <= 150 && y >= 40 && y <= 100 && c_en[1] == 1)
+    res = 2; // cell 2
+
+  if (x >= 170 && x <= 230 && y >= 40 && y <= 100 && c_en[2] == 1)
+    res = 3; // cell 3
+
+  if (x >= 250 && x <= 310 && y >= 40 && y <= 100 && c_en[3] == 1)
+    res = 4; // cell 4
+
+  if (x >= 10 && x <= 70 && y >= 120 && y <= 180 && c_en[4] == 1)
+    res = 5; // cell 5
+
+  if (x >= 90 && x <= 150 && y >= 120 && y <= 180 && c_en[5] == 1)
+    res = 6; // cell 6
+
+  if (x >= 170 && x <= 230 && y >= 120 && y <= 180 && c_en[6] == 1)
+    res = 7; // cell 7
+
+  if (x >= 250 && x <= 310 && y >= 120 && y <= 180 && c_en[7] == 1)
+    res = 8; // cell 8
+
+  if (x >= 40 && x <= 120 && y >= 200 && y <= 230)
+    res = 9; // BACK
+
+  if (x >= 200 && x <= 280 && y >= 200 && y <= 230)
+    res = 10; // QUIT
+
+  return res;
+} 
+
+void printIC(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+
+  disp.print("INITIALIZING", 63, 52);
+  disp.print("COMPONENTS", 79, 172);
+}
+
+void printNCE(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+
+  disp.print("NET", 135, 22);
+  disp.print("CONNECTION", 79, 82);
+  disp.print("ERROR", 119, 142);
+
+  disp.drawRoundRect(10, 190, 310, 230);
+  disp.print("RESET", 119, 202);
+}
+
+int touchNCE(int x, int y)
+{
+  int res = 0;
+
+  if (x >= 10 && x <= 310 && y >= 190 && y <= 230)
+    res = 1; // RESET
+
+  return res;
+}
+
+void printSCE(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+
+  disp.print("SERVER", 111, 22);
+  disp.print("CONNECTION", 79, 82);
+  disp.print("ERROR", 119, 142);
+
+  disp.drawRoundRect(10, 190, 310, 230);
+  disp.print("RESET", 119, 202);
+}
+
+int touchSCE(int x, int y)
+{
+  int res = 0;
+
+  if (x >= 10 && x <= 310 && y >= 190 && y <= 230)
+    res = 1; // RESET
+
+  return res;
+}
+
+void printCOK(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+
+  disp.print("CLOSE CELL", 79, 22);
+  disp.print("AND", 135, 82);
+  disp.print("PRESS OK", 95, 142);
+
+  disp.drawRoundRect(100, 190, 220, 230);
+  disp.print("OK", 143, 202);
+}
+
+int touchCOK(int x, int y)
+{
+  int res = 0;
+
+  if (x >= 100 && x <= 220 && y >= 190 && y <= 230)
+    res = 1; // OK
+
+  return res;
+}
+
+void printWFV(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+  disp.print("WAITING", 103, 24);
+  disp.print("FOR VALUE", 87, 84);
+  
+  disp.drawRoundRect(50, 130, 150, 170);
+  disp.print("BACK", 68, 144);
+
+  disp.drawRoundRect(170, 130, 270, 170);
+  disp.print("QUIT", 188, 144);
+}
+
+int touchWFV(int x, int y)
+{
+  int res = 0;
+
+  if (x >= 50 && x <= 150 && y >= 130 && y <= 170)
+    res = 1; // BACK
+
+  if (x >= 170 && x <= 270 && y >= 130 && y <= 170)
+    res = 2; // QUIT
+
+  return res;
+}
+
+void printVV(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+  disp.print("VALID VALUE", 71, 204);
+}
+
+void printIV(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+  disp.print("INVALID VALUE", 55, 204);
+}
+
+void printWT(int r, int g, int b)
+{
+  disp.setColor(r, g, b);
+  disp.print("WRONG TYPE", 79, 204);
+}
+
+/*
+ * ====================================================================================================
+ */
+
+// Для считывателя меток
+/* 
+ *  Содержимое UID используемых меток
+ * 0 символ - знак начала передачи (числовой код 2) 
+ * 1-2 символы - служебные
+ * 3-10 символы - собственно UID
+ * 11-12 символы - проверочные
+ * 13 символ - знак конца передачи (числовой код 3)
+ */
+#define UID_LEN 14
+#define UID_FROM 3
+#define UID_TO 10
+
+char pid[UID_LEN]; // Для хранения ID пропуска
+char vid[UID_LEN]; // Для хранения ID ценности
+
+/*
+ * ====================================================================================================
+ */
+
+// Пины, к которым подключены замки
+#define L1 31
+#define L2 32
+#define L3 33
+#define L4 34
+#define L5 35
+#define L6 36
+#define L7 37
+#define L8 38
+
+int locks [] = {L1, L2, L3, L4, L5, L6, L7, L8}; // Для удобства работы с замками
+const int locks_amount = 8; // Количество замков, оно же используется как количество ячеек
+
+/*
+ * Функция, выполняющая закрытие всех замков.
+ * Входных и выходных параметров нет.
+ */
+void lockAll () {
+  for (int i = 0; i < locks_amount; ++i)
+  {
+    digitalWrite(locks[i], LOW);
+  }
+}
+
+/*
+ * Функция, выполняющая открытие всех замков.
+ * Входных и выходных параметров нет.
+ */
+void unlockAll () {
+  for (int i = 0; i < locks_amount; ++i)
+  {
+    digitalWrite(locks[i], HIGH);
+  }
+}
+
+/*
+ * Функция, выполняющая закрытие определенного замка.
+ * Входной параметр: номер ячейки.
+ * Выходных параметров нет.
+ */
+void lock(int cell_number) {
+  digitalWrite(locks[cell_number], LOW);
+}
+
+/*
+ * Функция, выполняющая открытие определенного замка.
+ * Входной параметр: номер ячейки.
+ * Выходных параметров нет.
+ */
+void unlock(int cell_number) {
+  digitalWrite(locks[cell_number], HIGH);
+}
+
+/*
+ * ====================================================================================================
+ */
+
+// Прочее для умного шкафа
+#include <SPI.h>
+
+#define TIMEOUT 30000 // Максимальное время бездействия в течение сеанса работы с системой
+#define CONN_NET_ERR_DELAY 60000 // Задержка до перехода в состояние инициализации из состояния ошибки соединения с сетью
+#define CONN_SRV_ERR_DELAY 60000 // Задержка до перехода в состояние инициализации из состояния ошибки соединения с сервером
+
+// ID шкафа и его длина
+const char cid[] = {'M', 'A', '0', '7', '0', '1'};
+const int cid_length = 6;
+
+// Для хранения текущего и предыдущего состояния
+int state;
+int prev_state;
+
+// Возможные действия и переменная для хранения текущего действия
+#define ACT_TAKE '1'
+#define ACT_RET  '2'
+char action; // 2 == RETURN, 1 == TAKE
+
+// Для хранения информации о текущей ячейке и доступных ячейках
+int cell;
+int cells_enable[locks_amount];
+#define CELL_ENABLED  '1'
+#define CELL_DISABLED '0'
+
+// Для вычисления задержек
+unsigned long m, curr_m;
+
+// Две функции для очистки последовательных портов №0 и №1
+
+void clearSerial() {
+  while (Serial.available()) {
+    Serial.read();
+  }
+}
+
+void clearSerial1() {
+  while (Serial1.available()) {
+    Serial1.read();
+  }
+}
