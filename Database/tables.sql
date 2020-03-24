@@ -10,7 +10,7 @@ CREATE TABLE closets
 	c_bld      NUMBER(2)       NOT NULL,	
 	c_floor    NUMBER(2)       NOT NULL,
 	c_desc     VARCHAR(500)    NOT NULL,
-	CONSTRAINT pk_closets      PRIMARY KEY (c_id)
+	CONSTRAINT pk_closets      PRIMARY KEY (c_id),
 	CONSTRAINT fk_closets_blds FOREIGN KEY (c_bld) REFERENCES buildings (bld_id)
 )
 
@@ -23,8 +23,8 @@ CREATE TABLE cells
 	cs_closet  VARCHAR(10)      NOT NULL,
 	cs_currval NUMBER(2)        NOT NULL,
 	cs_maxval  NUMBER(2)        NOT NULL,
-	CONSTRAINT pk_cells         PRIMARY KEY (cs_closet , cs_num)
-	CONSTRAINT fk_cells_closets FOREIGN KEY (cs_closet) REFERENCES closets(c_id)
+	CONSTRAINT pk_cells         PRIMARY KEY (cs_closet , cs_num),
+	CONSTRAINT fk_cells_closets FOREIGN KEY (cs_closet) REFERENCES closets(c_id),
 	CONSTRAINT fk_cells_types   FOREIGN KEY (cs_type)   REFERENCES types(t_name)
 )
 
@@ -68,7 +68,7 @@ CREATE TABLE users
 	u_io       VARCHAR(60)   NOT NULL,
 	u_email	   VARCHAR(60)   NOT NULL,
 	u_code	   VARCHAR(20)   NOT NULL,
-	CONSTRAINT pk_users      PRIMARY KEY (u_id)
+	CONSTRAINT pk_users      PRIMARY KEY (u_id),
   	CONSTRAINT fk_users_deps FOREIGN KEY (u_code) REFERENCES departments (d_code)
 );
 
