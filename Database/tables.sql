@@ -24,7 +24,7 @@ CREATE TABLE cells
 	cs_currval NUMBER(2)        NOT NULL,
 	cs_maxval  NUMBER(2)        NOT NULL,
 	CONSTRAINT pk_cells         PRIMARY KEY (cs_closet , cs_num)
-	CONSTRAINT fk_cells_closets FOREIGN KEY (cs_closet) REFERENCES closets(bld_id)
+	CONSTRAINT fk_cells_closets FOREIGN KEY (cs_closet) REFERENCES closets(c_id)
 	CONSTRAINT fk_cells_types   FOREIGN KEY (cs_type)   REFERENCES types(t_name)
 )
 
