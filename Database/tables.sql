@@ -32,9 +32,9 @@ CREATE TABLE cells
 
 CREATE TABLE types
 (
-	t_name     VARCHAR(60)
+	t_name     VARCHAR(60),
 	CONSTRAINT pk_types PRIMARY KEY (t_name)
-)
+);
 
 -- Справочная таблица корпуса для closets
 
