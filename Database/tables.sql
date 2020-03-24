@@ -12,7 +12,7 @@ CREATE TABLE closets
 	c_desc     VARCHAR(500)    NOT NULL,
 	CONSTRAINT pk_closets      PRIMARY KEY (c_id),
 	CONSTRAINT fk_closets_blds FOREIGN KEY (c_bld) REFERENCES buildings (bld_id)
-)
+);
 
 -- Таблица ячейки
 
@@ -26,7 +26,7 @@ CREATE TABLE cells
 	CONSTRAINT pk_cells         PRIMARY KEY (cs_closet , cs_num),
 	CONSTRAINT fk_cells_closets FOREIGN KEY (cs_closet) REFERENCES closets(c_id),
 	CONSTRAINT fk_cells_types   FOREIGN KEY (cs_type)   REFERENCES types(t_name)
-)
+);
 
 -- Справочная таблица типы для mvalues
 
