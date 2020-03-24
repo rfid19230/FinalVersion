@@ -77,7 +77,7 @@ CREATE TABLE users
 CREATE TABLE departments
 (
 	d_code	   VARCHAR(20),
-	d_name	   VARCHAR(300) NOT NULL,
+	d_name	   VARCHAR(400) NOT NULL,
 	CONSTRAINT pk_code      PRIMARY KEY (d_code)
 );
 
