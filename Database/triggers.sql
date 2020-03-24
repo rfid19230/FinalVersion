@@ -18,9 +18,9 @@ BEGIN
 	VALUES 
 	(:old.c_id,
 	 :old.c_cells,
-   :old.c_bld,
-   :old.c_floor,
-   :old.c_desc);
+         :old.c_bld,
+         :old.c_floor,
+         :old.c_desc);
 END;
 _____________________________________
 --Триггер, заносящий данные в архивные таблицы a_cells
@@ -35,9 +35,9 @@ BEGIN
 	VALUES 
 	(:old.cs_num,
 	 :old.cs_type,
-   :old.cs_closet,
-   :old.cs_currval,
-   :old.cs_maxval);
+         :old.cs_closet,
+         :old.cs_currval,
+         :old.cs_maxval);
 END;
 _____________________________________
 --Триггер, заносящий данные в архивные таблицы a_types
@@ -65,8 +65,8 @@ BEGIN
 	INSERT INTO a_buildings
 	VALUES 
 	(:old.bld_id,
-   :old.bld_section,
-   :old.bld_name);
+         :old.bld_section,
+         :old.bld_name);
 END;
 
 _____________________________________
@@ -81,9 +81,9 @@ BEGIN
 	INSERT INTO a_mvalues 
 	VALUES 
 	(:old.mv_id,
-   :old.mv_type,
+         :old.mv_type,
 	 :old.mv_closet,
-   :old.mv_cell,
+         :old.mv_cell,
 	 :old.mv_desc);
 END;
 
@@ -101,7 +101,7 @@ BEGIN
 	(:old.u_id,
 	 :old.u_f,
 	 :old.u_io,
-   :old.u_email,
+         :old.u_email,
 	 :old.u_code);
 END;
 
