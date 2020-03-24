@@ -40,10 +40,10 @@ CREATE TABLE types
 
 CREATE TABLE buildings
 (
-	bld_id      NUMBER(2),
-  bld_section VARCHAR(40)  NOT NULL,
-  bld_name    VARCHAR(80)  NOT NULL,
-  CONSTRAINT  pk_buildings PRIMARY KEY  (bld_id)
+  	bld_id      NUMBER(2),
+  	bld_section VARCHAR(40)  NOT NULL,
+  	bld_name    VARCHAR(80)  NOT NULL,
+  	CONSTRAINT  pk_buildings PRIMARY KEY  (bld_id)
 );
 -- Таблица материальные вещи
 
@@ -52,10 +52,10 @@ CREATE TABLE mvalues
 	mv_id      VARCHAR(14),
 	mv_type	   VARCHAR(60)      NOT NULL,
 	mv_closet  VARCHAR(10)      NOT NULL,
-  mv_cell    NUMBER(2)        NOT NULL,
+ 	mv_cell    NUMBER(2)        NOT NULL,
 	mv_desc    VARCHAR(500)     NOT NULL,
 	CONSTRAINT pk_mvalues       PRIMARY KEY (mv_id),
-	CONSTRAINT fk_mvalues_cell  FOREIGN KEY (mv_closet, mv_cell) REFERENCES cells(cs_closet , cs_num),
+	CONSTRAINT fk_mvalues_cells FOREIGN KEY (mv_closet, mv_cell) REFERENCES cells(cs_closet , cs_num),
 	CONSTRAINT fk_mvalues_types FOREIGN KEY (mv_type)            REFERENCES types(t_name)
 );
 
@@ -69,7 +69,7 @@ CREATE TABLE users
 	u_email	   VARCHAR(60)   NOT NULL,
 	u_code	   VARCHAR(20)   NOT NULL,
 	CONSTRAINT pk_users      PRIMARY KEY (u_id)
-  CONSTRAINT fk_users_deps FOREIGN KEY (u_code) REFERENCES departments (d_code)
+  	CONSTRAINT fk_users_deps FOREIGN KEY (u_code) REFERENCES departments (d_code)
 );
 
 -- Справочная таблица департаментов для таблицы users
