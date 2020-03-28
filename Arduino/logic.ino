@@ -31,6 +31,7 @@ void setup() {
   // Инициализация состояния системы
   prev_state = STATE_SETUP;
   state = STATE_CONN_NET;
+
 }
 
 /*
@@ -149,6 +150,7 @@ void connNetErr() {
     }
 
     if (ts.dataAvailable()) {
+      ts.read();
       button = touchNCE(tpyToX(ts.TP_Y), tpxToY(ts.TP_X));
     }
   }
@@ -216,6 +218,7 @@ void connSrvErr() {
     }
 
     if (ts.dataAvailable()) {
+      ts.read();
       button = touchSCE(tpyToX(ts.TP_Y), tpxToY(ts.TP_X));
     }
   }
@@ -341,6 +344,7 @@ void chooseAction() {
     }
 
     if (ts.dataAvailable()) {
+      ts.read();
       button = touchTRQ(tpyToX(ts.TP_Y), tpxToY(ts.TP_X));
     }
   }
