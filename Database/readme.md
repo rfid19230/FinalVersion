@@ -10,4 +10,4 @@ config.sql- системные вызовы.
 deps input.txt-список департаментов МИЭМ НИУ ВШЭ.  
 users input.txt-список сотрудников и преподавателей МИЭМ НИУ ВШЭ.  
   
-Документация: https://drive.google.com/drive/folders/1Z9gxu3DcFF5D4BonwINV26MSYeblQ48q
+[Документация](https://drive.google.com/drive/folders/1Z9gxu3DcFF5D4BonwINV26MSYeblQ48q)
