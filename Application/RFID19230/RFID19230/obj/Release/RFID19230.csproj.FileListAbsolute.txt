@@ -1,0 +1,10 @@
+C:\Users\Lenovo\Desktop\ProjectFinalVersion\Application\RFID19230\WindowsFormsApp1\bin\Release\RFID19230.exe.config
+C:\Users\Lenovo\Desktop\ProjectFinalVersion\Application\RFID19230\WindowsFormsApp1\bin\Release\RFID19230.exe
+C:\Users\Lenovo\Desktop\ProjectFinalVersion\Application\RFID19230\WindowsFormsApp1\bin\Release\RFID19230.pdb
+C:\Users\Lenovo\Desktop\ProjectFinalVersion\Application\RFID19230\WindowsFormsApp1\obj\Release\RFID19230.csprojAssemblyReference.cache
+C:\Users\Lenovo\Desktop\ProjectFinalVersion\Application\RFID19230\WindowsFormsApp1\obj\Release\RFID19230.MainForm.resources
+C:\Users\Lenovo\Desktop\ProjectFinalVersion\Application\RFID19230\WindowsFormsApp1\obj\Release\RFID19230.Properties.Resources.resources
+C:\Users\Lenovo\Desktop\ProjectFinalVersion\Application\RFID19230\WindowsFormsApp1\obj\Release\RFID19230.csproj.GenerateResource.cache
+C:\Users\Lenovo\Desktop\ProjectFinalVersion\Application\RFID19230\WindowsFormsApp1\obj\Release\RFID19230.csproj.CoreCompileInputs.cache
+C:\Users\Lenovo\Desktop\ProjectFinalVersion\Application\RFID19230\WindowsFormsApp1\obj\Release\RFID19230.exe
+C:\Users\Lenovo\Desktop\ProjectFinalVersion\Application\RFID19230\WindowsFormsApp1\obj\Release\RFID19230.pdb
