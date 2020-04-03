@@ -1,4 +1,0 @@
-localhost
-1521
-rfid
-19230
