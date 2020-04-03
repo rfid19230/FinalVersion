@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.902
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RFID19230", "WindowsFormsApp1\RFID19230.csproj", "{A6B4479D-A80F-40C4-B491-5F4011A696C1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A6B4479D-A80F-40C4-B491-5F4011A696C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6B4479D-A80F-40C4-B491-5F4011A696C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6B4479D-A80F-40C4-B491-5F4011A696C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6B4479D-A80F-40C4-B491-5F4011A696C1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FA125FC6-BAF0-4E99-94A8-D5D278B6188F}
+	EndGlobalSection
+EndGlobal
