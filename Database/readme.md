@@ -8,4 +8,4 @@ packages.sql-код пакета для вызова информации о в�
 indexes.sql-код индексов, обеспечивающих быстрый доступ к строкам таблиц.  
 config.sql- системные вызовы.    
   
-[Документация](https://drive.google.com/drive/folders/1Z9gxu3DcFF5D4BonwINV26MSYeblQ48q)
+[Документация](https://drive.google.com/open?id=1uPWVVgO-y44pitA2inbBeXcjj7m4T7H5)
