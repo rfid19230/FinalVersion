@@ -235,6 +235,46 @@ namespace RFID19230
                                            "'" + MsgParts[VidIndex] + "', sysdate, NULL)";
                                 Cmd.CommandText = QueryStr;
                                 Cmd.ExecuteNonQuery();
+                                
+                                // aam
+                                
+                                // получение ИО пользователя
+                                QueryStr = "SELECT u_io FROM users WHERE u_id = " + "'" + MsgParts[PidIndex] + "'";
+                                Cmd.CommandText = QueryStr;
+                                String UIO = Cmd.ExecuteScalar().ToString();
+
+                                // получение адреса почты пользователя
+                                QueryStr = "SELECT u_email FROM users WHERE u_id = " + "'" + MsgParts[PidIndex] + "'";
+                                Cmd.CommandText = QueryStr;
+                                String Email = Cmd.ExecuteScalar().ToString();
+                                Email = Email.Split('@')[0] + "miem.hse.ru";                             
+
+                                // получение описания ценности
+                                QueryStr = "SELECT mv_desc FROM mvalues WHERE mv_id = " + "'" + MsgParts[VidIndex] + "'";
+                                Cmd.CommandText = QueryStr;
+                                String Desc = Cmd.ExecuteScalar().ToString();
+
+                                // отправитель - устанавливаем адрес и отображаемое в письме имя
+                                MailAddress from = new MailAddress("storage@miem.hse.ru", "Умный шкаф");
+                                // кому отправляем
+                                MailAddress to = new MailAddress(Email);
+                                // создаем объект сообщения
+                                MailMessage m = new MailMessage(from, to);
+                                // тема письма
+                                m.Subject = "Взятые материальные ценности";
+                                // текст письма
+                                m.Body = "Здравствуйте, " + UIO + "!<br> Вы взяли <strong> " + Desc + "</strong>. <br> Просьба вернуть взятые вещи до конца дня. Хорошего вам настроения!</p> <br>" +
+                                    "С уважением, служба Умный шкаф.";
+                                // письмо представляет код html
+                                m.IsBodyHtml = true;
+                                // адрес smtp-сервера и порт, с которого будем отправлять письмо
+                                SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587);
+                                // логин и пароль
+                                smtp.Credentials = new NetworkCredential("storage@miem.hse.ru", "rfid19230!");
+                                smtp.EnableSsl = true;
+                                smtp.Send(m);
+
+                                //aam
                             }
                             // Если производится возврат
                             else
