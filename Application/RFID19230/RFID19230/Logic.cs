@@ -236,44 +236,55 @@ namespace RFID19230
                                 Cmd.CommandText = QueryStr;
                                 Cmd.ExecuteNonQuery();
                                 
-                                // aam
-                                
-                                // получение ИО пользователя
-                                QueryStr = "SELECT u_io FROM users WHERE u_id = " + "'" + MsgParts[PidIndex] + "'";
-                                Cmd.CommandText = QueryStr;
-                                String UIO = Cmd.ExecuteScalar().ToString();
+                                 //aam
+                                Thread EmailThread = new Thread(() =>
+                                {
+                                    using (OracleConnection ThreadConn = new OracleConnection(ConnStr))
+                                    {
+                                        ThreadConn.Open();
 
-                                // получение адреса почты пользователя
-                                QueryStr = "SELECT u_email FROM users WHERE u_id = " + "'" + MsgParts[PidIndex] + "'";
-                                Cmd.CommandText = QueryStr;
-                                String Email = Cmd.ExecuteScalar().ToString();
-                                Email = Email.Split('@')[0] + "miem.hse.ru";                             
+                                        // получение ИО пользователя
+                                        String ThreadQueryStr = "SELECT u_io FROM users WHERE u_id = " + "'" + MsgParts[PidIndex] + "'";
+                                        OracleCommand ThreadCmd = new OracleCommand(ThreadQueryStr, ThreadConn);
+                                        ThreadCmd.CommandText = ThreadQueryStr;
+                                        String UIO = ThreadCmd.ExecuteScalar().ToString();
 
-                                // получение описания ценности
-                                QueryStr = "SELECT mv_desc FROM mvalues WHERE mv_id = " + "'" + MsgParts[VidIndex] + "'";
-                                Cmd.CommandText = QueryStr;
-                                String Desc = Cmd.ExecuteScalar().ToString();
+                                        // получение адреса почты пользователя
+                                        ThreadQueryStr = "SELECT u_email FROM users WHERE u_id = " + "'" + MsgParts[PidIndex] + "'";
+                                        ThreadCmd.CommandText = ThreadQueryStr;
+                                        String Email = ThreadCmd.ExecuteScalar().ToString();
+                                        Email = Email.Split('@')[0] + "@miem.hse.ru";
 
-                                // отправитель - устанавливаем адрес и отображаемое в письме имя
-                                MailAddress from = new MailAddress("storage@miem.hse.ru", "Умный шкаф");
-                                // кому отправляем
-                                MailAddress to = new MailAddress(Email);
-                                // создаем объект сообщения
-                                MailMessage m = new MailMessage(from, to);
-                                // тема письма
-                                m.Subject = "Взятые материальные ценности";
-                                // текст письма
-                                m.Body = "Здравствуйте, " + UIO + "!<br> Вы взяли <strong> " + Desc + "</strong>. <br> Просьба вернуть взятые вещи до конца дня. Хорошего вам настроения!</p> <br>" +
-                                    "С уважением, служба Умный шкаф.";
-                                // письмо представляет код html
-                                m.IsBodyHtml = true;
-                                // адрес smtp-сервера и порт, с которого будем отправлять письмо
-                                SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587);
-                                // логин и пароль
-                                smtp.Credentials = new NetworkCredential("storage@miem.hse.ru", "rfid19230!");
-                                smtp.EnableSsl = true;
-                                smtp.Send(m);
+                                        // получение описания ценности
+                                        ThreadQueryStr = "SELECT mv_desc FROM mvalues WHERE mv_id = " + "'" + MsgParts[VidIndex] + "'";
+                                        ThreadCmd.CommandText = ThreadQueryStr;
+                                        String Desc = ThreadCmd.ExecuteScalar().ToString();
 
+                                        // отправитель - устанавливаем адрес и отображаемое в письме имя
+                                        MailAddress from = new MailAddress("storage@miem.hse.ru", "Умный шкаф");
+                                        // кому отправляем
+                                        MailAddress to = new MailAddress(Email);
+                                        // создаем объект сообщения
+                                        MailMessage m = new MailMessage(from, to);
+                                        // тема письма
+                                        m.Subject = "Взятые материальные ценности";
+                                        // текст письма
+                                        m.Body = "Здравствуйте, " + UIO + "!<br> Вы взяли <strong> " + Desc + "</strong>. <br> Просьба вернуть взятые вещи до конца дня. Хорошего вам настроения!</p> <br>" +
+                                            "С уважением, служба Умный шкаф.";
+                                        // письмо представляет код html
+                                        m.IsBodyHtml = true;
+                                        // адрес smtp-сервера и порт, с которого будем отправлять письмо
+                                        SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587);
+                                        // логин и пароль
+                                        smtp.Credentials = new NetworkCredential("storage@miem.hse.ru", "rfid19230!");
+                                        smtp.EnableSsl = true;
+                                        smtp.Send(m);
+
+                                        ToLogTB("Отправлено письмо о взятии на адрес " + Email + EOL);
+                                    }
+                                });
+                                EmailThread.IsBackground = true;
+                                EmailThread.Start();
                                 //aam
                             }
                             // Если производится возврат
